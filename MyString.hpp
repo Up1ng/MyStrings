@@ -7,42 +7,40 @@ using namespace std;
 class Mystring
 {
 private:
-    char *str;     // Указатель на строку
-    int length;    // Длина строки
-    int *refCount; // Счётчик ссылок
-
-    // Создаёт новый буфер и копирует туда данные
+    char *str;
+    int length;
+    int *refCount;
     void allocateAndCopy(const char *source, int len);
 
-    // Отделяет буфер при copy-on-write
     void detach();
 
 public:
-    // Конструкторы и деструктор
-    Mystring();                      // по умолчанию
-    Mystring(const char *input);     // из C-строки
-    Mystring(const Mystring &other); // копирования
-    ~Mystring();                     // деструктор
+    Mystring();
+    Mystring(const char *input);
+    Mystring(const Mystring &other);
+    ~Mystring();
 
-    // Операторы
-    Mystring &operator=(const Mystring &other);  // присваивание
-    Mystring operator+(const Mystring &other);   // конкатенация
-    Mystring &operator+=(const Mystring &other); // добавление к себе
+    Mystring &operator=(const Mystring &other);
+    Mystring operator+(const Mystring &other);
+    Mystring &operator+=(const Mystring &other);
 
-    bool operator==(const Mystring &other) const; // равенство
-    bool operator!=(const Mystring &other) const; // неравенство
-    bool operator<(const Mystring &other) const;  // меньше
-    bool operator>(const Mystring &other) const;  // больше
-    bool operator<=(const Mystring &other) const; // меньше или равно
-    bool operator>=(const Mystring &other) const; // больше или равно
+    bool operator==(const Mystring &other) const;
+    bool operator!=(const Mystring &other) const;
+    bool operator<(const Mystring &other) const;
+    bool operator>(const Mystring &other) const;
+    bool operator<=(const Mystring &other) const;
+    bool operator>=(const Mystring &other) const;
 
-    char &operator[](int index);             // доступ по индексу (с изменением)
-    const char &operator[](int index) const; // доступ по индексу (только чтение)
+    char &operator[](int index);
+    const char &operator[](int index) const;
 
-    // Методы
-    int Length() const;        // длина строки
-    void Print() const;        // вывод в консоль
-    int CountRef() const;      // количество ссылок
-    void Clear();              // очистка строки
-    const char *c_str() const; // получить C-строку
+    int Length() const;
+    void Print() const;
+    int CountRef() const;
+    void Clear();
+    const char *c_str() const;
+
+    int Find(char c) const;
+    int Find(const Mystring& substr) const;
+
 };
