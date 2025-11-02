@@ -1,50 +1,161 @@
+#include <gtest/gtest.h>
 #include "MyString.hpp"
-#include <iostream>
-using namespace std;
 
-int main() {
-    // ✅ Конструкторы
+TEST(MyStringTest, Print) {
     Mystring s1("Hello");
     Mystring s2("World");
-    Mystring s3(s1); // copy constructor
+    Mystring s3(s1);
+    
+    EXPECT_STREQ("Hello", s1.c_str());
+    EXPECT_STREQ("World", s2.c_str());
+    EXPECT_STREQ("Hello", s3.c_str());
+}
 
-    cout << "s1: "; s1.Print(); cout << endl;
-    cout << "s2: "; s2.Print(); cout << endl;
-    cout << "s3 (copy of s1): "; s3.Print(); cout << endl;
-
-    // ✅ Присваивание
+TEST(MyStringTest, equalop) {
+    Mystring s1("Hello");
+    Mystring s2("World");
+    Mystring s3(s1);
+    
     s3 = s2;
-    cout << "s3 after assignment s2: "; s3.Print(); cout << endl;
+    EXPECT_STREQ("World", s3.c_str());
+}
 
-    // ✅ Конкатенация
+TEST(MyStringTest, PlusOperator) {
+    Mystring s1("Hello");
+    Mystring s2("World");
+    
     Mystring s4 = s1 + s2;
-    cout << "s4 (s1 + s2): "; s4.Print(); cout << endl;
+    EXPECT_STREQ("HelloWorld", s4.c_str());
+}
 
+TEST(MyStringTest, PlusEqualOperator) {
+    Mystring s1("Hello");
+    Mystring s2("World");
+    
     s1 += s2;
-    cout << "s1 after s1 += s2: "; s1.Print(); cout << endl;
+    EXPECT_STREQ("HelloWorld", s1.c_str());
+}
 
-    // ✅ Сравнения
-    cout << "s1 == s4 ? " << (s1 == s4) << endl;
-    cout << "s1 != s2 ? " << (s1 != s2) << endl;
-    cout << "s2 < s1 ? " << (s2 < s1) << endl;
-    cout << "s2 > s1 ? " << (s2 > s1) << endl;
-    cout << "s2 <= s1 ? " << (s2 <= s1) << endl;
-    cout << "s2 >= s1 ? " << (s2 >= s1) << endl;
+TEST(MyStringTest, ComparisonOperators) {
+    Mystring s1("abc");
+    Mystring s2("abc");
+    Mystring s3("abd");
+    Mystring s4("ab");
+    
+    EXPECT_TRUE(s1 == s2);
+    EXPECT_TRUE(s1 != s3);
+    EXPECT_TRUE(s1 < s3);
+    EXPECT_TRUE(s3 > s1);
+    EXPECT_TRUE(s4 <= s1);
+    EXPECT_TRUE(s1 >= s4);
+}
 
-    // ✅ Доступ по индексу
-    cout << "s2[0]: " << s2[0] << endl;
-    s2[0] = 'w'; // copy-on-write
-    cout << "s2 after modification: "; s2.Print(); cout << endl;
+TEST(MyStringTest, IndexOperatorAndCOW) {
+    Mystring s1("World");
+    Mystring s2 = s1;
+    
+    EXPECT_EQ('W', s1[0]);
+    EXPECT_EQ('W', s2[0]);
+    
+    s2[0] = 'w';
+    
+    EXPECT_STREQ("World", s1.c_str());
+    EXPECT_STREQ("world", s2.c_str());
+    
+    EXPECT_LE(1, s1.CountRef());
+    EXPECT_LE(1, s2.CountRef());
+}
 
-    // ✅ Clear
-    s2.Clear();
-    cout << "s2 after Clear(): "; s2.Print(); cout << " (length = " << s2.Length() << ")" << endl;
+TEST(MyStringTest, ClearMethod) {
+    Mystring s1("Hello");
+    s1.Clear();
+    
+    EXPECT_STREQ("", s1.c_str());
+    EXPECT_EQ(0, s1.Length());
+}
 
-    // ✅ CountRef
-    Mystring s5("Test");
-    Mystring s6 = s5;
-    cout << "s5 CountRef: " << s5.CountRef() << endl;
-    cout << "s6 CountRef: " << s6.CountRef() << endl;
+TEST(MyStringTest, ReferenceCounting) {
+    Mystring s1("Test");
+    EXPECT_EQ(1, s1.CountRef());
+    
+    {
+        Mystring s2 = s1;
+        EXPECT_EQ(2, s1.CountRef());
+        EXPECT_EQ(2, s2.CountRef());
+        
+        {
+            Mystring s3;
+            s3 = s1;
+            EXPECT_EQ(3, s1.CountRef());
+            EXPECT_EQ(3, s2.CountRef());
+            EXPECT_EQ(3, s3.CountRef());
+        }
+        
+        EXPECT_EQ(2, s1.CountRef());
+        EXPECT_EQ(2, s2.CountRef());
+    }
+    
+    EXPECT_EQ(1, s1.CountRef());
+}
 
-    return 0;
+TEST(MyStringTest, SelfAssignment) {
+    Mystring s1("Test");
+    s1 = s1;
+    
+    EXPECT_STREQ("Test", s1.c_str());
+    EXPECT_EQ(1, s1.CountRef());
+}
+
+TEST(MyStringTest, EmptyString) {
+    Mystring s1;
+    Mystring s2("");
+    
+    EXPECT_STREQ("", s1.c_str());
+    EXPECT_STREQ("", s2.c_str());
+    EXPECT_EQ(0, s1.Length());
+    EXPECT_EQ(0, s2.Length());
+}
+
+TEST(MyStringTest, ReferenceBehavior) {
+    Mystring s1("Original");
+    EXPECT_EQ(1, s1.CountRef());
+    
+    Mystring s2 = s1;
+    EXPECT_EQ(2, s1.CountRef());
+    EXPECT_EQ(2, s2.CountRef());
+    EXPECT_EQ(s1.c_str(), s2.c_str());
+    
+    s2[0] = 'X';
+    EXPECT_STREQ("Original", s1.c_str());
+    EXPECT_STREQ("Xriginal", s2.c_str());
+    EXPECT_EQ(1, s1.CountRef());
+    EXPECT_EQ(1, s2.CountRef());
+    EXPECT_NE(s1.c_str(), s2.c_str());
+}
+
+TEST(MyStringTest, FindChar) {
+    Mystring s("Hello");
+    Mystring u("privet kak dela vse good love you goodbai poka omg9");
+    EXPECT_EQ(50, u.Find('9'));
+    
+    EXPECT_EQ(0, s.Find('H'));
+    EXPECT_EQ(2, s.Find('l'));
+    EXPECT_EQ(-1, s.Find('x'));
+}
+
+TEST(MyStringTest, FindSubstring) {
+    Mystring s("Hello World");
+
+    Mystring m("privet kak dela vse good love you goodbai poka omg cheezecake");
+    EXPECT_EQ(51, m.Find("cheezecake"));
+    
+    
+    EXPECT_EQ(0, s.Find("Hello"));
+    EXPECT_EQ(6, s.Find("World"));
+    EXPECT_EQ(-1, s.Find("Test"));
+}
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
