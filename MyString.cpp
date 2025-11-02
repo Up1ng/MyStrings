@@ -12,14 +12,11 @@ void Mystring::allocateAndCopy(const char *source, int len)
     refCount = new int(1);
 }
 
-void Mystring::detach()
-{
-    if (*refCount > 1)
-    {
+void Mystring::detach() {
+    if (*refCount > 1) {
         (*refCount)--;
         char *newBuf = new char[length + 1];
-        for (int i = 0; i < length; i++)
-        {
+        for (int i = 0; i < length; i++) {
             newBuf[i] = str[i];
         }
         newBuf[length] = '\0';
@@ -27,6 +24,7 @@ void Mystring::detach()
         refCount = new int(1);
     }
 }
+
 
 Mystring::Mystring()
 {
@@ -69,28 +67,21 @@ Mystring::~Mystring()
     }
 }
 
-Mystring &Mystring::operator=(const Mystring &other)
-{
-    if (this != &other)
-    {
+Mystring &Mystring::operator=(const Mystring &other) {
+    if (this != &other) {
         (*refCount)--;
-        if (*refCount == 0)
-        {
+        if (*refCount == 0) {
             delete[] str;
             delete refCount;
         }
-
+        str = other.str;
         length = other.length;
-        str = new char[length + 1];
-        for (int i = 0; i < length; i++)
-        {
-            str[i] = other.str[i];
-        }
-        str[length] = '\0';
-        refCount = new int(1);
+        refCount = other.refCount;
+        (*refCount)++;
     }
     return *this;
 }
+
 
 Mystring Mystring::operator+(const Mystring &other)
 {
@@ -160,18 +151,13 @@ bool Mystring::operator!=(const Mystring &other) const
 
 bool Mystring::operator<(const Mystring &other) const
 {
-    int minLen;
-    if (length < other.length)
-        minLen = length;
-    else
-        minLen = other.length;
+    int minLen = length < other.length ? length : other.length;
 
     for (int i = 0; i < minLen; i++)
     {
-        if (str[i] < other.str[i])
-            return true;
-        if (str[i] > other.str[i])
-            return false;
+        if(str[i] == other.str[i])
+            continue;
+        return str[i] < other.str[i];
     }
     return length < other.length;
 }
@@ -233,4 +219,37 @@ void Mystring::Clear()
     str = new char[1];
     str[0] = '\0';
     length = 0;
+}
+
+
+int Mystring::Find(char c) const
+{
+    for (int i = 0; i < length; i++)
+    {
+        if (str[i] == c)
+            return i;
+    }
+    return -1;
+}
+
+int Mystring::Find(const Mystring& substr) const
+{
+    int subLen = substr.length;
+    if (subLen == 0) return 0;
+    
+    for (int i = 0; i <= length - subLen; i++)
+    {
+        bool found = true;
+        for (int j = 0; j < subLen; j++)
+        {
+            if (str[i + j] != substr.str[j])
+            {
+                found = false;
+                break;
+            }
+        }
+        if (found)
+            return i;
+    }
+    return -1;
 }
